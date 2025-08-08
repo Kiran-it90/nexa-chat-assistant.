@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mira - Voice Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="chatbox">
+        <h2>🧠 NEXA – Your Smart Chat Assistant </h2>
+
+        <div class="chat-log" id="chat-log">
+            {% for speaker, line in chat %}
+                <div class="message {{ 'user' if speaker == 'You' else 'bot' }}">
+                    <strong>{{ speaker }}:</strong> {{ line }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <button onclick="startListening()">🎙️ Speak</button>
+        <audio id="audio-player" autoplay></audio>
+    </div>
+
+    <script>
+    function scrollToBottom() {
+        const chatLog = document.getElementById("chat-log");
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function startListening() {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.start();
+
+        recognition.onresult = function (event) {
+            const command = event.results[0][0].transcript;
+            const chatLog = document.getElementById("chat-log");
+
+            // Add user message
+            const userMsg = document.createElement("div");
+            userMsg.className = "message user";
+            userMsg.innerHTML = `<strong>You:</strong> ${command}`;
+            chatLog.appendChild(userMsg);
+            scrollToBottom();
+
+            fetch("/process", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command })
+            })
+            .then(res => res.json())
+            .then(data => {
+                const botMsg = document.createElement("div");
+                botMsg.className = "message bot";
+                botMsg.innerHTML = `<strong>Mira:</strong> ${data.reply}`;
+                chatLog.appendChild(botMsg);
+                scrollToBottom();
+
+                if (data.audio) {
+                    const audioPlayer = document.getElementById("audio-player");
+                    audioPlayer.src = data.audio;
+                    audioPlayer.play();
+                }
+            })
+            .catch(err => console.error("Processing failed", err));
+        };
+    }
+    </script>
+</body>
+</html>

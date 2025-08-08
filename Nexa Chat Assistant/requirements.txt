@@ -1,0 +1,7 @@
+Flask
+gTTS
+playsound
+SpeechRecognition
+yt_dlp
+openai
+python-dotenv
