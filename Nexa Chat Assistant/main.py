@@ -13,11 +13,9 @@ app = Flask(__name__)
 load_dotenv()
 
 chat_history = []
-
-# ✅ Configure Gemini API
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-# 🎤 Text-to-Speech (in-memory)
+#Text-to-Speech (in-memory)
 def generate_speech_bytes(text):
     """Generate MP3 audio in memory without saving to disk."""
     print(f"Mira: {text}")
@@ -32,7 +30,7 @@ def generate_speech_bytes(text):
         print(f"[ERROR] TTS failed: {e}")
         return None
 
-# 🤖 Get AI response from Gemini
+#Get AI response from Gemini
 def get_chatgpt_response(prompt):
     try:
         model = genai.GenerativeModel("gemini-1.5-flash")
@@ -44,7 +42,7 @@ def get_chatgpt_response(prompt):
         traceback.print_exc()
         return "Sorry, Gemini API failed."
 
-# 🧠 Process user query
+#Process user query
 def process_command(query):
     chat_history.append(("You", query))
 
@@ -73,12 +71,12 @@ def process_command(query):
     else:
         return get_chatgpt_response(query)
 
-# 🌐 Home page
+#Home page
 @app.route("/")
 def index():
     return render_template("index.html", chat=chat_history)
 
-# 📩 Handle text/voice command
+#Handle text/voice command
 @app.route("/process", methods=["POST"])
 def process():
     data = request.get_json()
@@ -94,7 +92,7 @@ def process():
         "audio_url": f"/speak?text={reply}"  # frontend can fetch audio directly
     })
 
-# 🔊 Speak endpoint (returns MP3 in-memory)
+#Speak endpoint (returns MP3 in-memory)
 @app.route('/speak', methods=['GET'])
 def speak_route():
     text = request.args.get('text', '')
@@ -107,10 +105,11 @@ def speak_route():
     else:
         return jsonify({"error": "TTS failed."}), 500
 
-# 📡 Chat history fetch
+#Chat history fetch
 @app.route("/chat", methods=["GET"])
 def get_chat():
     return jsonify({"chat": chat_history})
 
 if __name__ == "__main__":
+
     app.run(debug=True)
